@@ -1,5 +1,3 @@
-import FingerTree.{consF, snocF}
-
 trait Monoid[T] {
   def empty: T
   def combine(x: T, y: T): T
@@ -101,16 +99,36 @@ enum FingerTree[+T] {
       case _ => List.empty // Should not be possible
 
     (this, ts, that) match
-      case (Empty, ts, xs)     => consF(ts, xs)
-      case (xs, ts, Empty)     => snocF(xs, ts)
-      case (Single(x), ts, xs) => consF(ts, xs).cons(x)
-      case (xs, ts, Single(x)) => snocF(xs, ts).snoc(x)
+      case (Empty, ts, xs)     => FingerTree.consF(ts, xs)
+      case (xs, ts, Empty)     => FingerTree.snocF(xs, ts)
+      case (Single(x), ts, xs) => FingerTree.consF(ts, xs).cons(x)
+      case (xs, ts, Single(x)) => FingerTree.snocF(xs, ts).snoc(x)
       case (Deep(pr1, m1, sf1), ts, Deep(pr2, m2, sf2)) =>
         Deep(pr1, m1.app3(nodes(toList(sf1) ++ ts ++ toList(pr2)), m2), sf2)
   }
 
   def append[A >: T](that: FingerTree[A]): FingerTree[A] =
     this.app3(List.empty, that)
+
+  def isEmpty: Boolean =
+    ViewL(this) match
+      case ViewL.NilL()      => true
+      case ViewL.ConsL(_, _) => false
+
+  def firstElem: Option[T] =
+    ViewL(this) match
+      case ViewL.NilL()         => None
+      case ViewL.ConsL(head, _) => Some(head)
+
+  def tail: Option[FingerTree[T]] =
+    ViewL(this) match
+      case ViewL.NilL()         => None
+      case ViewL.ConsL(_, tail) => Some(tail)
+
+  def lastElem: Option[T] =
+    ViewR(this) match
+      case ViewR.NilR()         => None
+      case ViewR.SnocR(_, last) => Some(last)
 }
 
 given treeR[A, B]: Reduce[FingerTree, A, B] with {
@@ -133,6 +151,69 @@ given treeR[A, B]: Reduce[FingerTree, A, B] with {
 
 }
 
+enum ViewL[F[+_], +T] {
+  case NilL[F[+_]]() extends ViewL[F, Nothing]
+  case ConsL(head: T, rest: F[T]) extends ViewL[F, T]
+}
+
+object ViewL {
+
+  def apply[T](tree: FingerTree[T]): ViewL[FingerTree, T] = tree match
+    case FingerTree.Empty     => NilL()
+    case FingerTree.Single(v) => ConsL(v, FingerTree.Empty)
+    case FingerTree.Deep(head, middle, last) =>
+      head match
+        case Digit.One(a) =>
+          val t = ViewL.apply(middle) match
+            case NilL() => FingerTree(last)
+            case ConsL(head, rest) =>
+              head match
+                case Node.Pair(a, b) =>
+                  FingerTree.Deep(Digit.Two(a, b), rest, last)
+                case Node.Triple(a, b, c) =>
+                  FingerTree.Deep(Digit.Three(a, b, c), rest, last)
+
+          ConsL(a, t)
+        case Digit.Two(a, b) =>
+          ConsL(a, FingerTree.Deep(Digit.One(b), middle, last))
+        case Digit.Three(a, b, c) =>
+          ConsL(a, FingerTree.Deep(Digit.Two(b, c), middle, last))
+        case Digit.Four(a, b, c, d) =>
+          ConsL(a, FingerTree.Deep(Digit.Three(b, c, d), middle, last))
+
+}
+
+enum ViewR[F[+_], +T] {
+  case NilR[F[+_]]() extends ViewR[F, Nothing]
+  case SnocR(front: F[T], last: T) extends ViewR[F, T]
+}
+object ViewR {
+
+  def apply[T](tree: FingerTree[T]): ViewR[FingerTree, T] = tree match
+    case FingerTree.Empty     => NilR()
+    case FingerTree.Single(v) => SnocR(FingerTree.Empty, v)
+    case FingerTree.Deep(head, middle, last) =>
+      last match
+        case Digit.One(a) =>
+          val t = ViewR.apply(middle) match
+            case NilR() => FingerTree(head)
+            case SnocR(front, last) =>
+              last match
+                case Node.Pair(b, a) =>
+                  FingerTree.Deep(head, front, Digit.Two(b, a))
+                case Node.Triple(c, b, a) =>
+                  FingerTree.Deep(head, front, Digit.Three(c, b, a))
+
+          SnocR(t, a)
+        case Digit.Two(b, a) =>
+          SnocR(FingerTree.Deep(head, middle, Digit.One(b)), a)
+        case Digit.Three(c, b, a) =>
+          SnocR(FingerTree.Deep(head, middle, Digit.Two(c, b)), a)
+        case Digit.Four(d, c, b, a) =>
+          SnocR(FingerTree.Deep(head, middle, Digit.Three(d, c, b)), a)
+
+}
+
 object FingerTree {
 
   def consF[F[_], A](s: F[A], t: FingerTree[A])(using
@@ -143,7 +224,7 @@ object FingerTree {
       red: Reduce[F, A, FingerTree[A]]
   ): FingerTree[A] = red.reduceL(_.snoc(_))(t, s)
 
-  def toTree[F[_], A](s: F[A])(using
+  def apply[F[_], A](s: F[A])(using
       Reduce[F, A, FingerTree[A]]
   ): FingerTree[A] =
     consF(s, FingerTree.Empty)
