@@ -8,7 +8,7 @@ import org.scalacheck.Gen
 class IndexedSuite extends ScalaCheckSuite {
 
   val genIdx: Gen[(Int, Int)] =
-    Gen.choose(1, 10000).flatMap(l => Gen.choose(1, l - 1).map((l, _)))
+    Gen.choose(1, 10000).flatMap(l => Gen.choose(0, l - 1).map((l, _)))
 
   property("length") {
     forAll { (a: List[Int]) =>
