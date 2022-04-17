@@ -51,6 +51,7 @@ enum FingerTree[V, +T] {
 
   import Digit.*
   import FingerTree.*
+  import Node.*
 
   def cons[A >: T](
       a: A
@@ -59,7 +60,7 @@ enum FingerTree[V, +T] {
       case Empty()   => Single(a)
       case Single(b) => deep(One(a), Empty(), One(b))
       case Deep(_, Four(b, c, d, e), middle, last) =>
-        deep(Two(a, b), middle.cons(Node.triple(c, d, e)), last)
+        deep(Two(a, b), middle.cons(triple(c, d, e)), last)
       case Deep(_, One(b), middle, last) =>
         deep(Two(a, b), middle, last)
       case Deep(_, Two(b, c), middle, last) =>
@@ -74,7 +75,7 @@ enum FingerTree[V, +T] {
       case Empty()   => Single(a)
       case Single(b) => deep(One(b), Empty[V](), One(a))
       case Deep(_, first, middle, Four(e, d, c, b)) =>
-        deep(first, middle.snoc(Node.triple(e, d, c)), Two(b, a))
+        deep(first, middle.snoc(triple(e, d, c)), Two(b, a))
       case Deep(_, first, middle, Three(d, c, b)) =>
         deep(first, middle, Four(d, c, b, a))
       case Deep(_, first, middle, Two(c, b)) =>
@@ -137,6 +138,7 @@ enum FingerTree[V, +T] {
 
 object FingerTree {
 
+  // O(1)
   def deep[V, T](
       head: Digit[T],
       middle: FingerTree[V, Node[V, T]],

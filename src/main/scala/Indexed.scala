@@ -23,10 +23,10 @@ object Indexed {
 
   extension [T](seq: Indexed[T]) {
     def get(idx: Int): T =
-      Split.splitTree((i: Size) => i > idx, 0, seq).elem
+      Split.splitTree((_: Size) > idx, 0, seq).elem
 
     def splitAt(idx: Int): (Indexed[T], Indexed[T]) =
-      Split.split((i: Size) => i > idx, seq)
+      Split.split((_: Size) > idx, seq)
 
     def length: Int =
       treeM.measure(seq)

@@ -15,6 +15,7 @@ given digitM[A, V](using
     mon: Monoid[V],
     meas: Measured[A, V]
 ): Measured[Digit[A], V] with {
+  // O(1)
   override def measure(a: Digit[A]): V = a match
     case Digit.One(a)    => meas.measure(a)
     case Digit.Two(a, b) => mon.combine(meas.measure(a), meas.measure(b))
@@ -37,6 +38,7 @@ given treeM[V, T](using
     mon: Monoid[V],
     meas: Measured[T, V]
 ): Measured[FingerTree[V, T], V] with {
+  // O(1)
   override def measure(a: FingerTree[V, T]): V = a match
     case FingerTree.Empty()          => mon.empty
     case FingerTree.Single(v)        => meas.measure(v)
