@@ -7,6 +7,9 @@ import org.scalacheck.Gen
 
 class IndexedSuite extends ScalaCheckSuite {
 
+  val genIdx: Gen[(Int, Int)] =
+    Gen.choose(1, 10000).flatMap(l => Gen.choose(1, l - 1).map((l, _)))
+
   property("length") {
     forAll { (a: List[Int]) =>
       a.length == Indexed(a).length
@@ -14,9 +17,18 @@ class IndexedSuite extends ScalaCheckSuite {
   }
 
   property("idx") {
-    forAll(Gen.choose(1, 10000)) { (a: Int) =>
-      Indexed(List.tabulate(a)(_ + 1)).get(a) == a
+    forAll(genIdx) { case (l: Int, i: Int) =>
+      Indexed(List.tabulate(l)(identity)).get(i) == i
     }
+  }
+
+  property("splitAt") {
+    forAll(genIdx) { case (l: Int, i: Int) =>
+      val list = List.tabulate(l)(identity)
+      val (a, b) = Indexed(list).splitAt(i)
+      list == toList(a) ++ toList(b)
+    }
+
   }
 
 }

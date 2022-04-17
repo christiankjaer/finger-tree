@@ -25,6 +25,9 @@ object Indexed {
     def get(idx: Int): T =
       Split.splitTree((i: Size) => i > idx, 0, seq).elem
 
+    def splitAt(idx: Int): (Indexed[T], Indexed[T]) =
+      Split.split((i: Size) => i > idx, seq)
+
     def length: Int =
       treeM.measure(seq)
   }
