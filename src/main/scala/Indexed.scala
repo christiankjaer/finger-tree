@@ -17,4 +17,15 @@ object Indexed {
   given [T]: Measured[Elem[T], Size] with {
     override def measure(a: Elem[T]): Size = 1
   }
+
+  def apply[T](elems: List[T]): Indexed[T] =
+    FingerTree(elems)
+
+  extension [T](seq: Indexed[T]) {
+    def get(idx: Int): T =
+      Split.splitTree((i: Size) => i > idx, 0, seq).elem
+
+    def length: Int =
+      treeM.measure(seq)
+  }
 }

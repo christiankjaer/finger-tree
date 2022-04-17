@@ -2,6 +2,11 @@ enum Node[V, +T] {
   case Pair(m: V, a: T, b: T)
   case Triple(m: V, a: T, b: T, c: T)
   val m: V
+
+  def toDigit: Digit[T] =
+    this match
+      case Pair(_, a, b)      => Digit.Two(a, b)
+      case Triple(_, a, b, c) => Digit.Three(a, b, c)
 }
 
 object Node {
@@ -36,13 +41,13 @@ enum Digit[+T] {
 enum FingerTree[V, +T] {
   // Empty arg case class instead of case object due to invariance in V.
   case Empty[V]() extends FingerTree[V, Nothing]
-  case Single(v: T)
+  case Single(v: T) extends FingerTree[V, T]
   case Deep(
       m: V,
       head: Digit[T],
       middle: FingerTree[V, Node[V, T]],
       last: Digit[T]
-  )
+  ) extends FingerTree[V, T]
 
   import Digit.*
   import FingerTree.*

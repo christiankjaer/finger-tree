@@ -59,7 +59,6 @@ given treeR[V, A, B]: Reduce[[X] =>> FingerTree[V, X], A, B] with {
 
 }
 
-
 object Reduce {
 
   def toList[F[_], A](as: F[A])(using red: Reduce[F, A, List[A]]): List[A] = {

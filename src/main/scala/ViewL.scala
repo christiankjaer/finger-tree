@@ -9,8 +9,8 @@ object ViewL {
   import Digit.*
 
   def apply[V, T](
-      tree: FingerTree[V, T]
-  )(using Monoid[V], Measured[T, V]): ViewL[V, T] = tree match
+                   tree: FingerTree[V, T]
+                 )(using Monoid[V], Measured[T, V]): ViewL[V, T] = tree match
     case Empty()   => NilL()
     case Single(v) => ConsL(v, Empty())
     case Deep(_, head, middle, last) =>
